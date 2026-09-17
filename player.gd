@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 @export var SPEED := 300.0
-@export var RECOIL_FORCE := 600.0
+@export var RECOIL_FORCE := 2000.0
 @export var FRICTION := 10.0
 
 @onready var ray_cast: RayCast2D = $RayCast2D
@@ -10,8 +10,10 @@ extends CharacterBody2D
 const HAZARD_LAYER := 2
 
 var is_resetting := false
+var spawn_position: Vector2
 
 func _ready() -> void:
+	spawn_position = global_position
 	ray_cast.collision_mask = 1 | HAZARD_LAYER
 
 	if collision_shape and collision_shape.shape:
@@ -67,8 +69,14 @@ func reset_player() -> void:
 	if is_resetting:
 		return
 	is_resetting = true
-	
-	#get_tree().call_deferred("reload_current_scene")
+	# Deferred because this is usually triggered from a physics callback
+	call_deferred("_respawn")
+
+func _respawn() -> void:
+	global_position = spawn_position
+	velocity = Vector2.ZERO
+	rotation = 0.0
+	is_resetting = false
 
 func launch_backward() -> void:
 	var direction_to_mouse := global_position.direction_to(get_global_mouse_position())
